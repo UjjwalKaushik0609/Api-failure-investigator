@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: api_failure_investigator
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d api_failure_investigator"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  chromadb:
+    image: chromadb/chroma:0.5.23
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/api_failure_investigator
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      chromadb:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  chroma_data:
