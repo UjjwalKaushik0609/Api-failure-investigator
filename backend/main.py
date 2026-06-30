@@ -26,7 +26,9 @@ vector_store = ChromaIncidentStore()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origin_list,
+    allow_origins=[
+        "https://heroic-tenderness-production-bc6b.up.railway.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
