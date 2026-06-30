@@ -19,6 +19,8 @@ from workflows.investigation_workflow import investigation_app
 
 
 settings = get_settings()
+print("CORS_ORIGINS ENV:", settings.cors_origins)
+print("CORS LIST:", settings.cors_origin_list)
 app = FastAPI(title=settings.app_name, version="1.0.0")
 vector_store = ChromaIncidentStore()
 
